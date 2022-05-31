@@ -1,3 +1,5 @@
+import {originalTemplate} from '../templates/original.js';
+
 class ArrayCreditLock extends HTMLElement {
     constructor() {
         super();
@@ -8,24 +10,22 @@ class ArrayCreditLock extends HTMLElement {
         this.hideLockHistory = false;
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         if (!this.rendered) {
-            this.render();
+            await this.render();
             this.rendered = true;
         }
     }
 
     async render() {
         this.attachShadow({mode: "open"});
-
-        this.shadowRoot.appendChild(originalTemplate.content.cloneNode(true));
+        this.shadowRoot.appendChild(originalTemplate);
 
         await this.displayCreditHistory();
         this.toggleStepAndFacts();
         this.toggleCredHistory();
         this.toggleLockHistory();
     }
-
 
     formatTime = (clientDate) => {
         const date = new Date(clientDate);
@@ -64,12 +64,13 @@ class ArrayCreditLock extends HTMLElement {
      * Ingests the data from the API and displays it in the credit history section
      * @returns {Promise<any>}
      */
-    readJson = async () => {
-        return await fetch("/data.json")
+    getJsonData = async () => {
+        return await fetch("../test_data.json")
             .then((response) => {
                 return response.json();
             })
             .then((json) => {
+                console.log("json", json);
                 return json;
             })
             .catch((error) => console.error(error));
@@ -80,21 +81,22 @@ class ArrayCreditLock extends HTMLElement {
      * @returns {Promise<void>}
      */
     displayCreditHistory = async () => {
-        const creditHistoryList = this.shadowRoot.getElementById("credit-history-list");
-
-        while (creditHistoryList.firstChild) {
-            creditHistoryList.removeChild(creditHistoryList.firstChild);
+        const originalTemplateElement = this.shadowRoot.firstElementChild;
+        const creditHistoryList = originalTemplateElement.getElementsByClassName("history-list");
+        const creditHistoryParent = originalTemplateElement.getElementsByClassName("history-list-parent")[0];
+        while (creditHistoryList.length) {
+            creditHistoryParent.removeChild(creditHistoryList[0]);
         }
 
-        /* If true, clear '<li>s' and get show All (n) text, which will be hidden, then exit method  */
+        // Will clear all the list items and early exit
         if (this.hideLockHistory) {
             this.getShowAllText();
+            creditHistoryParent.style.display = "none";
             return;
         }
+        creditHistoryParent.style.display = "block";
 
-        const ul = this.shadowRoot.getElementById("credit-history-list");
-
-        this.data = await this.readJson();
+        this.data = await this.getJsonData();
 
         this.numOfRemainingItems = this.data.length - this.numOfShownItems;
         this.getShowAllText();
@@ -106,42 +108,40 @@ class ArrayCreditLock extends HTMLElement {
             historyListItem.classList.add("history-list");
             historyListItem.appendChild(documentFragment);
 
-            /* if showAll is false, and number to display exceeded, exit loop  */
             if (index >= this.numOfShownItems && !this.showAllCreditHistory) {
                 break;
             }
-
-            ul.appendChild(li);
+            creditHistoryParent.appendChild(historyListItem);
         }
     }
-
 
     toggleCredHistory() {
         const showAll = this.shadowRoot.querySelector(".show-all");
 
-        showAll.addEventListener("click", () => {
+        showAll.addEventListener("click", async (evt) => {
+            evt.preventDefault();
+            evt.stopPropagation();
+
             this.showAllCreditHistory = !this.showAllCreditHistory;
-            this.displayCreditHistory();
+            await this.displayCreditHistory();
         });
     }
 
     toggleLockHistory() {
         const historyTitle = this.shadowRoot.querySelector(".history-title");
-        const transUnionFile = this.shadowRoot.querySelector(".transunion-file");
 
-        historyTitle.addEventListener("click", () => {
+        historyTitle.addEventListener("click", async (evt) => {
+            evt.preventDefault();
+            evt.stopPropagation();
+
             this.hideLockHistory = !this.hideLockHistory;
-            // Reset list to only show 5 items whenever history is clicked
             this.showAllCreditHistory = false;
-            this.displayCreditHistory();
+            await this.displayCreditHistory();
 
             historyTitle.innerText = this.hideLockHistory
                 ? "Show lock history"
                 : "Hide lock history";
 
-            transUnionFile.innerText = this.hideLockHistory
-                ? "Your TransUnion File is Locked"
-                : "Your TransUnion File is Open";
         });
     }
 
@@ -157,7 +157,9 @@ class ArrayCreditLock extends HTMLElement {
         const factHeaders = this.shadowRoot.querySelectorAll(".collapsible");
 
         factHeaders.forEach((factHeader) => {
-            factHeader.addEventListener("click", () => {
+            factHeader.addEventListener("click", (evt) => {
+                evt.preventDefault();
+                evt.stopPropagation();
                 factHeader.classList.toggle("expanded");
             });
         });

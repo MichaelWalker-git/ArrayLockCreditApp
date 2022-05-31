@@ -1,4 +1,4 @@
-const originalTemplate = document.createElement("original-template");
+export const originalTemplate = document.createElement("originalTemplate");
 
 originalTemplate.innerHTML = `
     <div class="theme-brigit container">
@@ -128,7 +128,7 @@ originalTemplate.innerHTML = `
             </div>
             <div>
               <p class="history-title">Hide lock history</p>
-              <ul>
+              <ul class="history-list-parent">
                 <li class="history-list">
                   <span class="date">2020-15-03 6:00PM GMT +5 </span>
                   <div class="lock-wrapper">
@@ -672,4 +672,4 @@ originalTemplate.innerHTML = `
       </section>
     </div>
 
-`
+`;
