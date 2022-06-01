@@ -11,5 +11,7 @@
     <orderEntry type="library" name="header.f70a581c7b6fb8d004f565244140ed26" level="application" />
     <orderEntry type="library" name="credit-freeze-center.dfca0446987a4417d634c2d9d8ed4546" level="application" />
     <orderEntry type="library" name="collapsible.137db3db165ac7a53818153471b712dc" level="application" />
+    <orderEntry type="library" name="collapsible" level="application" />
+    <orderEntry type="library" name="utils" level="application" />
   </component>
 </module>
